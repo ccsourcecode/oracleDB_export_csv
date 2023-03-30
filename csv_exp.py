@@ -153,8 +153,9 @@ def exp_table(conn, table, scn=None, exclude=None):
     stmt = 'SELECT * {0} FROM {1}'.format(columns, table)
     if scn is not None:
         stmt = stmt + ' AS OF SCN {0}'.format(str(scn))
-    print(stmt)
-    table_name = table.replace("\r", "")
+    print(stmt + "\n")
+    table_name = table.replace("\r", "") 
+
     with open("{0}.csv".format(table_name), "w", encoding="utf-8") as f:
         exp_sql(conn, f, stmt)
 
@@ -285,6 +286,18 @@ def main():
 
     # exporting
     try:
+        # create a folder
+        folder_name = 'exported_csv'
+        # get current directory path
+        current_dir = os.getcwd()
+        os.chdir(current_dir)
+        
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+            os.chdir(folder_name)
+        else:
+            os.chdir(folder_name)
+
         # -o schemas
         if args.schemas is not None:
             for schema in args.schemas:
