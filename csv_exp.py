@@ -81,8 +81,8 @@ def get_safe_columns(conn, table, exclude=None):
     obj = table.split(".")
     to_exclude_str = None
     if exclude:
-        # determine if there are some columns to exlude from this table
-        to_exclude_str = ",".join(["'{0}'".format(col.split(".")[-1])
+        # determine if there are some columns to exclude from this table
+        to_exclude_str = ",".join(["'{0}'".format(col.decode().split(".")[-1])
                                    for col in exclude
                                    if col.startswith(table)])
 
@@ -148,13 +148,14 @@ def exp_table(conn, table, scn=None, exclude=None):
         "TABLE".
 
     """
-    sys.stderr.write("EXPORTING: {0}...\n".format(table))
+    sys.stderr.write("### EXPORTING: {0}...\n".format(table))
     columns = ",".join(get_safe_columns(conn, table, exclude))
-    stmt = 'SELECT {0} FROM {1}'.format(columns,
-                                        table)
+    stmt = 'SELECT * {0} FROM {1}'.format(columns, table)
     if scn is not None:
         stmt = stmt + ' AS OF SCN {0}'.format(str(scn))
-    with open("{0}.csv".format(table), "wb") as f:
+    print(stmt)
+    table_name = table.replace("\r", "")
+    with open("{0}.csv".format(table_name), "w", encoding="utf-8") as f:
         exp_sql(conn, f, stmt)
 
 
@@ -178,7 +179,7 @@ def exp_sql(conn, file_handle, stmt):
         csv_writer.writerow([c[0] for c in cur.description])
     rows = cur.fetchmany(DEFAULT_ARRAY)
     while len(rows) > 0:
-        # Substitute null with the requred value
+        # Substitute null with the required value
         if NULL_AS:
             for r in range(0, len(rows)):
                 if None in rows[r]:
@@ -295,7 +296,7 @@ def main():
         # -l filename
         elif args.tablist is not None:
             for table in args.tablist:
-                exp_table(conn, table.strip('\n'), args.scn, args.exclude)
+                exp_table(conn, table.decode().strip('\n'), args.scn, args.exclude)
         # -s sql
         elif args.sql is not None:
             exp_sql(conn, sys.stdout, args.sql)
